@@ -17,6 +17,8 @@
         table { width: 100%; border-collapse: collapse; background: white; margin-top: 20px; }
         th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
         th { background-color: #2c3e50; color: white; }
+        a { color: #3498db; text-decoration: none; }
+        a:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
@@ -67,6 +69,7 @@
             <th>Preferred School</th>
             <th>Recommended By</th>
             <th>Role</th>
+            <th>Contact</th>
         </tr>
     </thead>
     <tbody></tbody>
@@ -91,7 +94,7 @@ function normalizeData(data) {
             ID_NUMBER: d['ID NUMBER'],
             RECOMMENDED_BY: d['RECOMMENDED BY'],
             PREFERRED_SCHOOL: d['PREFERRED SCHOOL'],
-            ROLE: d['ROLE'] // new ROLE column
+            ROLE: d['ROLE']
         }));
 }
 
@@ -101,7 +104,7 @@ async function loadData() {
         const data = await response.json();
         console.log("Raw DATA RECEIVED:", data);
 
-        rawData = normalizeData(data); // normalize and remove empty rows
+        rawData = normalizeData(data); 
         console.log("Normalized DATA:", rawData);
 
         initializeFilters();
@@ -112,19 +115,18 @@ async function loadData() {
     }
 }
 
-// Auto refresh every 5 minutes
 setInterval(loadData, 300000);
 
 function initializeFilters() {
     populateFilter('regionFilter', 'REGION');
     populateFilter('schoolFilter', 'PREFERRED_SCHOOL');
     populateFilter('recommendedFilter', 'RECOMMENDED_BY');
-    populateFilter('roleFilter', 'ROLE'); // new ROLE filter
+    populateFilter('roleFilter', 'ROLE');
 }
 
 function populateFilter(filterId, field) {
     const select = document.getElementById(filterId);
-    select.innerHTML = '<option value="All">All</option>'; // reset options
+    select.innerHTML = '<option value="All">All</option>'; 
     const values = [...new Set(rawData.map(d => d[field]).filter(v => v))];
     values.forEach(v => {
         const option = document.createElement('option');
@@ -148,8 +150,6 @@ function applyFilters() {
         (role === 'All' || d['ROLE'] === role)
     );
 
-    console.log("Filtered Data:", filteredData);
-
     updateKPIs();
     updateCharts();
     updateTable();
@@ -161,7 +161,7 @@ function updateKPIs() {
     document.getElementById('uniqueSchools').textContent = new Set(filteredData.map(d => d['PREFERRED_SCHOOL'])).size;
     document.getElementById('uniqueRecommended').textContent = new Set(filteredData.map(d => d['RECOMMENDED_BY'])).size;
     document.getElementById('uniqueHR').textContent = new Set(filteredData.map(d => d['OUTSOURCING_HR'])).size;
-    document.getElementById('uniqueRoles').textContent = new Set(filteredData.map(d => d['ROLE'])).size; // new KPI
+    document.getElementById('uniqueRoles').textContent = new Set(filteredData.map(d => d['ROLE'])).size;
 }
 
 function generateChart(ctxId, labelField) {
@@ -200,12 +200,14 @@ function updateTable() {
     const tbody = document.querySelector('#dataTable tbody');
     tbody.innerHTML = '';
     filteredData.forEach(d => {
+        const contactLink = d['CONTACT'] ? `<a href="tel:${d['CONTACT']}">${d['CONTACT']}</a>` : '';
         const row = `<tr>
             <td>${d['REGION'] || ''}</td>
             <td>${d['NAME'] || ''}</td>
             <td>${d['PREFERRED_SCHOOL'] || ''}</td>
             <td>${d['RECOMMENDED_BY'] || ''}</td>
             <td>${d['ROLE'] || ''}</td>
+            <td>${contactLink}</td>
         </tr>`;
         tbody.innerHTML += row;
     });
