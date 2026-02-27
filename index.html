@@ -72,15 +72,30 @@ let filteredData = [];
 let charts = [];
 const webAppURL = "https://script.google.com/macros/s/AKfycby7hd8p0CxEOO_jAJ0m6fiUv8rJQasOPrLPbfk9YEYaPzIgVbIDQNRQYvuSH4UC45JNnA/exec";
 
+// Normalize keys and remove empty rows
+function normalizeData(data) {
+    return data
+        .filter(d => d['NAME']) // remove empty placeholder rows
+        .map(d => ({
+            S_N: d['S/N'],
+            REGION: d['REGION'],
+            OUTSOURCING_HR: d['OUTSOURCING HR'],
+            NAME: d['NAME'],
+            CONTACT: d['CONTACT'],
+            ID_NUMBER: d['ID NUMBER'],
+            RECOMMENDED_BY: d['RECOMMENDED BY'],
+            PREFERRED_SCHOOL: d['PREFERRED SCHOOL']
+        }));
+}
+
 async function loadData() {
     try {
         const response = await fetch(webAppURL);
         const data = await response.json();
+        console.log("Raw DATA RECEIVED:", data);
 
-        console.log("DATA RECEIVED:", data);
-
-        // Remove empty placeholder rows
-        rawData = data.filter(d => d['NAME']); 
+        rawData = normalizeData(data); // normalize and remove empty rows
+        console.log("Normalized DATA:", rawData);
 
         initializeFilters();
         applyFilters();
@@ -90,13 +105,13 @@ async function loadData() {
     }
 }
 
-// Optional auto refresh every 5 minutes
+// Auto refresh every 5 minutes
 setInterval(loadData, 300000);
 
 function initializeFilters() {
     populateFilter('regionFilter', 'REGION');
-    populateFilter('schoolFilter', 'PREFERRED SCHOOL');
-    populateFilter('recommendedFilter', 'RECOMMENDED BY');
+    populateFilter('schoolFilter', 'PREFERRED_SCHOOL');
+    populateFilter('recommendedFilter', 'RECOMMENDED_BY');
 }
 
 function populateFilter(filterId, field) {
@@ -119,8 +134,8 @@ function applyFilters() {
 
     filteredData = rawData.filter(d =>
         (region === 'All' || d['REGION'] === region) &&
-        (school === 'All' || d['PREFERRED SCHOOL'] === school) &&
-        (recommended === 'All' || d['RECOMMENDED BY'] === recommended)
+        (school === 'All' || d['PREFERRED_SCHOOL'] === school) &&
+        (recommended === 'All' || d['RECOMMENDED_BY'] === recommended)
     );
 
     console.log("Filtered Data:", filteredData);
@@ -133,9 +148,9 @@ function applyFilters() {
 function updateKPIs() {
     document.getElementById('totalRelievers').textContent = filteredData.length;
     document.getElementById('uniqueRegions').textContent = new Set(filteredData.map(d => d['REGION'])).size;
-    document.getElementById('uniqueSchools').textContent = new Set(filteredData.map(d => d['PREFERRED SCHOOL'])).size;
-    document.getElementById('uniqueRecommended').textContent = new Set(filteredData.map(d => d['RECOMMENDED BY'])).size;
-    document.getElementById('uniqueHR').textContent = new Set(filteredData.map(d => d['OUTSOURCING HR'])).size;
+    document.getElementById('uniqueSchools').textContent = new Set(filteredData.map(d => d['PREFERRED_SCHOOL'])).size;
+    document.getElementById('uniqueRecommended').textContent = new Set(filteredData.map(d => d['RECOMMENDED_BY'])).size;
+    document.getElementById('uniqueHR').textContent = new Set(filteredData.map(d => d['OUTSOURCING_HR'])).size;
 }
 
 function generateChart(ctxId, labelField) {
@@ -152,7 +167,8 @@ function generateChart(ctxId, labelField) {
             labels: Object.keys(grouped),
             datasets: [{
                 label: 'Count',
-                data: Object.values(grouped)
+                data: Object.values(grouped),
+                backgroundColor: 'rgba(54, 162, 235, 0.7)'
             }]
         },
         options: { responsive: true }
@@ -163,10 +179,10 @@ function updateCharts() {
     charts.forEach(c => c.destroy());
     charts = [];
     charts.push(generateChart('regionChart', 'REGION'));
-    charts.push(generateChart('schoolChart', 'PREFERRED SCHOOL'));
-    charts.push(generateChart('recommendedChart', 'RECOMMENDED BY'));
-    charts.push(generateChart('hrChart', 'OUTSOURCING HR'));
-    charts.push(generateChart('relieversBySchoolChart', 'PREFERRED SCHOOL'));
+    charts.push(generateChart('schoolChart', 'PREFERRED_SCHOOL'));
+    charts.push(generateChart('recommendedChart', 'RECOMMENDED_BY'));
+    charts.push(generateChart('hrChart', 'OUTSOURCING_HR'));
+    charts.push(generateChart('relieversBySchoolChart', 'PREFERRED_SCHOOL'));
 }
 
 function updateTable() {
@@ -176,8 +192,8 @@ function updateTable() {
         const row = `<tr>
             <td>${d['REGION'] || ''}</td>
             <td>${d['NAME'] || ''}</td>
-            <td>${d['PREFERRED SCHOOL'] || ''}</td>
-            <td>${d['RECOMMENDED BY'] || ''}</td>
+            <td>${d['PREFERRED_SCHOOL'] || ''}</td>
+            <td>${d['RECOMMENDED_BY'] || ''}</td>
         </tr>`;
         tbody.innerHTML += row;
     });
