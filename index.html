@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <title>Western Region Relievers Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f6f9; }
         h1 { text-align: center; }
@@ -23,8 +22,6 @@
 <body>
 
 <h1>Western Region Relievers Interactive Dashboard</h1>
-
-<input type="file" id="upload" accept=".xlsx, .xls" />
 
 <div class="filters">
     <div>
@@ -73,20 +70,29 @@
 let rawData = [];
 let filteredData = [];
 let charts = [];
+const webAppURL = "https://script.google.com/a/macros/food4education.org/s/AKfycby7hd8p0CxEOO_jAJ0m6fiUv8rJQasOPrLPbfk9YEYaPzIgVbIDQNRQYvuSH4UC45JNnA/exec";
 
-document.getElementById('upload').addEventListener('change', function(e) {
-    const reader = new FileReader();
-    reader.onload = function(evt) {
-        const data = new Uint8Array(evt.target.result);
-        const workbook = XLSX.read(data, { type: 'array' });
-        const sheet = workbook.Sheets[workbook.SheetNames[0]];
-        rawData = XLSX.utils.sheet_to_json(sheet);
+async function loadData() {
+    try {
+        const response = await fetch(webAppURL);
+        const data = await response.json();
+
+        console.log("DATA RECEIVED:", data);
+
+        rawData = data;
+
         initializeFilters();
         applyFilters();
-    };
-    reader.readAsArrayBuffer(e.target.files[0]);
-});
 
+    } catch (error) {
+        console.error("Error loading data:", error);
+    }
+}
+
+loadData();
+
+// Optional auto refresh every 5 minutes
+setInterval(loadData, 300000);
 function initializeFilters() {
     populateFilter('regionFilter', 'REGION');
     populateFilter('schoolFilter', 'PREFERRED SCHOOL');
