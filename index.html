@@ -77,9 +77,10 @@ async function loadData() {
         const response = await fetch(webAppURL);
         const data = await response.json();
 
-       console.log("FIRST ROW:", data[0]);
+        console.log("DATA RECEIVED:", data);
 
-        rawData = data;
+        // Remove empty placeholder rows
+        rawData = data.filter(d => d['NAME']); 
 
         initializeFilters();
         applyFilters();
@@ -89,10 +90,9 @@ async function loadData() {
     }
 }
 
-loadData();
-
 // Optional auto refresh every 5 minutes
 setInterval(loadData, 300000);
+
 function initializeFilters() {
     populateFilter('regionFilter', 'REGION');
     populateFilter('schoolFilter', 'PREFERRED SCHOOL');
@@ -101,6 +101,7 @@ function initializeFilters() {
 
 function populateFilter(filterId, field) {
     const select = document.getElementById(filterId);
+    select.innerHTML = '<option value="All">All</option>'; // reset options
     const values = [...new Set(rawData.map(d => d[field]).filter(v => v))];
     values.forEach(v => {
         const option = document.createElement('option');
@@ -121,6 +122,8 @@ function applyFilters() {
         (school === 'All' || d['PREFERRED SCHOOL'] === school) &&
         (recommended === 'All' || d['RECOMMENDED BY'] === recommended)
     );
+
+    console.log("Filtered Data:", filteredData);
 
     updateKPIs();
     updateCharts();
@@ -179,6 +182,8 @@ function updateTable() {
         tbody.innerHTML += row;
     });
 }
+
+loadData();
 </script>
 
 </body>
