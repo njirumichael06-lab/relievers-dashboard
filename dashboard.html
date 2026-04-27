@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Live Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<h2>Total Records: <span id="totalRecords">0</span></h2>
+
+<canvas id="regionChart"></canvas>
+
+<script>
+
+const webAppURL = "https://script.google.com/macros/s/AKfycbwP7dfUmWWyTezw8hiJ2cPMU5M8IxgTw2dW0tZQDK0_8xOEKn11YnBQ16Cdlol4y5LkNA/exec
+";
+
+async function loadData() {
+  const response = await fetch(webAppURL);
+  const data = await response.json();
+
+  document.getElementById("totalRecords").innerText = data.length;
+
+  const grouped = {};
+  data.forEach(item => {
+    const region = item["REGION"] || "Unknown";
+    grouped[region] = (grouped[region] || 0) + 1;
+  });
+
+  new Chart(document.getElementById("regionChart"), {
+    type: "bar",
+    data: {
+      labels: Object.keys(grouped),
+      datasets: [{
+        label: "Relievers by Region",
+        data: Object.values(grouped)
+      }]
+    }
+  });
+}
+
+loadData();
+
+</script>
+
+</body>
+</html>
